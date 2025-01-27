@@ -18,7 +18,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess, onLoginError }) =
 
     try {
       const data = await login(email, password);
-      localStorage.setItem('token', data.token); // Salva o token no localStorage
+      localStorage.setItem('token', data.token.token); // Salva o token no localStorage
+			
       onLoginSuccess();
     } catch (error) {
       onLoginError('Credenciais inválidas. Tente novamente.');

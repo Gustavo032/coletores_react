@@ -1,8 +1,9 @@
-// src/components/MovimentacaoForm.tsx
 
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, Box, RadioGroup, FormControlLabel, Radio, FormControl, FormLabel, Typography, Snackbar, Alert } from '@mui/material';
-import axios from 'axios';
+import { api } from '../api';
+import { useAuth } from '../hooks/useAuth';
+import { getUser } from '../services/authService';
 
 interface MovimentacaoFormProps {
   setorOrigem: string; // Setor de origem do usuário, passado pelo JWT
@@ -11,12 +12,13 @@ interface MovimentacaoFormProps {
 const MovimentacaoForm: React.FC<MovimentacaoFormProps> = ({ setorOrigem }) => {
   const [tipo, setTipo] = useState<string>('normal'); // Tipo do coletor: normal ou aud
   const [modelo, setModelo] = useState<string>('CT45'); // Modelo do coletor: CT45 ou TC22
-  const [idColetor, setIdColetor] = useState<number | string>(''); // ID do coletor
+  const [coletorId, setcoletorId] = useState<number | string>(''); // ID do coletor
   const [nomeColaborador, setNomeColaborador] = useState<string>(''); // Nome do colaborador
   const [hostname, setHostname] = useState<string>(''); // Hostname gerado
   const [acao, setAcao] = useState<string>('Retirar'); // Ação: Retirar ou Entregar
   const [erro, setErro] = useState<string>(''); // Mensagem de erro
   const [isLoading, setIsLoading] = useState<boolean>(false);
+	const { user } = useAuth();
 
   // Função para gerar o hostname com base no tipo, modelo e ID
   const gerarHostname = (tipo: string, modelo: string, id: string) => {
@@ -30,40 +32,42 @@ const MovimentacaoForm: React.FC<MovimentacaoFormProps> = ({ setorOrigem }) => {
 
   // Atualiza o hostname sempre que o tipo, modelo ou ID mudar
   useEffect(() => {
-    if (idColetor) {
-      setHostname(gerarHostname(tipo, modelo, String(idColetor)));
+    if (coletorId) {
+      setHostname(gerarHostname(tipo, modelo, String(coletorId)));
     }
-  }, [tipo, modelo, idColetor]);
+  }, [tipo, modelo, coletorId]);
 
   const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setIsLoading(true);
-
-    const data = {
-      setorOrigem,
-      tipo,
-      modelo,
-      idColetor,
-      nomeColaborador,
-      hostname,
-      acao
-    };
-
-    try {
-      const response = await axios.post('http://localhost:5000/api/movimentacoes', data);
-      // Redirecionar ou exibir sucesso
-      alert('Movimentação registrada com sucesso!');
-      // Limpar campos após sucesso
-      setIdColetor('');
-      setNomeColaborador('');
-      setErro('');
-    } catch (error: any) {
-      setErro(error.response?.data?.message || 'Erro ao registrar movimentação');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+		event.preventDefault();
+		setIsLoading(true);
+		const user = await getUser(); // Aguarda a Promise ser resolvida
+		// Agora você pode acessar 'user' e 'sectorId'
+		
+		// Ajuste a ação para ser 'retirado' ou 'entregue'
+		const acaoFormatada = acao === 'Retirar' ? 'retirado' : 'entregue';
+	
+		const data = {
+			coletorId,   // Envia o coletorId
+			nomeColaborador,
+			hostname,     // Envia o hostname gerado
+			acao: acaoFormatada,  // Envia a ação formatada
+			setorOrigemId: user?.user?.sectorId // Envia o departamento se necessário
+		};
+	
+		try {
+			const response = await api.post('/movimentacoes', data);
+			alert('Movimentação registrada com sucesso!');
+			setcoletorId('');
+			setNomeColaborador('');
+			setErro('');
+		} catch (error: any) {
+			setErro(error.response?.data?.message || 'Erro ao registrar movimentação');
+		} finally {
+			setIsLoading(false);
+		}
+	};
+	
+	
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 500, margin: '0 auto', padding: 3 }}>
       <Typography variant="h4" gutterBottom align="center">Cadastro de Movimentação</Typography>
@@ -92,8 +96,8 @@ const MovimentacaoForm: React.FC<MovimentacaoFormProps> = ({ setorOrigem }) => {
         variant="outlined"
         fullWidth
         margin="normal"
-        value={idColetor}
-        onChange={(e) => setIdColetor(e.target.value)}
+        value={coletorId}
+        onChange={(e) => setcoletorId(e.target.value)}
         required
       />
 
@@ -135,7 +139,7 @@ const MovimentacaoForm: React.FC<MovimentacaoFormProps> = ({ setorOrigem }) => {
         variant="contained"
         color="primary"
         fullWidth
-        disabled={isLoading || !idColetor || !nomeColaborador}
+        disabled={isLoading || !coletorId || !nomeColaborador}
       >
         {isLoading ? 'Carregando...' : 'Registrar Movimentação'}
       </Button>

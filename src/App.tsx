@@ -7,6 +7,9 @@ import HomePage from './pages/homePage';
 import UnauthorizedPage from './pages/unauthorizedPage';
 import UsuariosPage from './pages/usuariosPage';
 import SetoresPage from './pages/setoresPage';
+import EditSetorPage from './pages/editarSetorPage';
+import AddSetorPage from './pages/addSetorPage';
+import HistorialPage from './pages/historialPage';
 
 const App: React.FC = () => {
   return (
@@ -17,7 +20,11 @@ const App: React.FC = () => {
         <Route path="/home" element={<HomePage />} />
         <Route path="/movimentacao" element={<MovimentacaoPage />} />
         <Route path="/setores" element={<SetoresPage />} />
+        <Route path="/historic" element={<HistorialPage />} />
         <Route path="/usuarios" element={<UsuariosPage />} />
+				
+				<Route path="/setores/adicionar" element={<AddSetorPage />} />
+				<Route path="/setores/editar/:id" element={<EditSetorPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
       </Routes>

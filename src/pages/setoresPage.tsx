@@ -1,31 +1,46 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Container, Grid2, Paper, Typography } from '@mui/material';  // Mantendo Grid2
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';  // Usando useNavigate para navegação
-import { useAuth } from '../hooks/useAuth';  // Hook para pegar informações de usuário logado
+import { Button, Container, Grid2, Paper, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { api } from '../api';
 
 const SetoresPage = () => {
   const [setores, setSetores] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const { user } = useAuth();  // Pegando o usuário logado
-  const navigate = useNavigate();  // Usando useNavigate agora
+  const { user, loading: userLoading } = useAuth();
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+  console.log('Token recuperado no SetoresPage:', token);
 
   useEffect(() => {
-    // Só permite que administradores vejam a página de setores
-    if (!user || (user.role !== 'admin' && user.role !== 'admin_setor')) {
-      navigate('/unauthorized');  // Redireciona se não for autorizado
-    }
+    // Verifique se o usuário ainda está sendo carregado
+    if (userLoading) return;
 
-    axios.get('/setores')
-      .then(response => {
-        setSetores(response.data);
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error('Erro ao carregar setores:', error);
-        setLoading(false);
-      });
-  }, [user, navigate]);
+    console.log('Usuário no SetoresPage:', user); // Adicionando mais informações
+
+    // Converte o campo 'roles' para array se for uma string
+    const roles = Array.isArray(user?.roles) ? user.roles : JSON.parse(user?.roles || '[]');
+
+    // Checando as roles do usuário
+    if (!user || (!roles.includes('fullAdmin') && !roles.includes('admin_setor') && user.role !== 'fullAdmin')) {
+      console.log('Redirecionando para unauthorized devido à role do usuário.');
+      navigate('/unauthorized');
+    } else {
+      console.log('Usuário autorizado, carregando setores...');
+      api
+        .get('/sectors', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          setSetores(response.data);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error('Erro ao carregar setores:', error);
+          setLoading(false);
+        });
+    }
+  }, [user, userLoading, navigate]);
 
   const handleAddSetor = () => {
     navigate('/setores/adicionar');
@@ -37,7 +52,7 @@ const SetoresPage = () => {
 
   const handleDeleteSetor = (id: number) => {
     if (window.confirm('Tem certeza de que deseja excluir este setor?')) {
-      axios.delete(`/setores/${id}`)
+      api.delete(`/sectors/${id}`)
         .then(() => {
           setSetores(setores.filter(setor => setor.id !== id));
         })
@@ -57,7 +72,7 @@ const SetoresPage = () => {
       ) : (
         <Grid2 container spacing={2}>
           {setores.map(setor => (
-            <Grid2 key={setor.id} size={{xs:12, sm:6, md:4}}>  {/* Não precisa de "item" no Grid2 */}
+            <Grid2 key={setor.id} size={{ xs: 12, sm: 6, md: 4 }}>
               <Paper elevation={3} sx={{ padding: 2 }}>
                 <Typography variant="h6">{setor.nome}</Typography>
                 <Typography variant="body2">ID: {setor.id}</Typography>

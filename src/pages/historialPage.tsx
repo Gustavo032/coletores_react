@@ -1,38 +1,58 @@
-// src/pages/HistorialPage.tsx
-
 import React, { useState, useEffect } from 'react';
 import { Box, TextField, Button, Grid, Snackbar, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Typography, Alert } from '@mui/material';
-import axios from 'axios';
-
 import { debounce } from 'lodash';
+import { api } from '../api';
+import { format } from 'date-fns';
 
 const HistorialPage: React.FC = () => {
   const [setorOrigem, setSetorOrigem] = useState('');
-  const [setorDestino, setSetorDestino] = useState('');
   const [dataInicio, setDataInicio] = useState<string>('');
   const [dataFim, setDataFim] = useState<string>('');
   const [status, setStatus] = useState<string>('');
   const [colaborador, setColaborador] = useState('');
   const [modelo, setModelo] = useState('');
   const [movimentacoes, setMovimentacoes] = useState<any[]>([]);
+  const [filteredMovimentacoes, setFilteredMovimentacoes] = useState<any[]>([]); // Estado para armazenar os dados filtrados
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+
+  // Função para filtrar movimentações
+  const filterMovimentacoes = () => {
+    let filteredData = movimentacoes;
+
+    // Quando todos os filtros estiverem vazios, mostramos todos os dados
+    if (!setorOrigem && !dataInicio && !dataFim && !status && !colaborador && !modelo) {
+        setFilteredMovimentacoes(movimentacoes);  // Exibe todos os dados
+        return; // Não aplica mais filtros quando todos estão vazios
+    }
+
+    // Quando houver filtros, aplica-os
+    if (setorOrigem) filteredData = filteredData.filter(item => item.setorOrigem?.nome.includes(setorOrigem));
+    if (dataInicio) filteredData = filteredData.filter(item => new Date(item.dataMovimentacao) >= new Date(dataInicio));
+    if (dataFim) filteredData = filteredData.filter(item => new Date(item.dataMovimentacao) <= new Date(dataFim));
+    if (status) filteredData = filteredData.filter(item => item.status.includes(status));
+    if (colaborador) filteredData = filteredData.filter(item => item.nomeColaborador.includes(colaborador));
+
+    // Filtro para Modelo/Hostname
+    if (modelo) {
+        filteredData = filteredData.filter(item => {
+            const modeloHostname = `${item.coletor?.modelo} ${item.coletor?.hostname}`;
+            return modeloHostname.toLowerCase().includes(modelo.toLowerCase());
+        });
+    }
+
+    // Atualiza a lista filtrada
+    setFilteredMovimentacoes(filteredData);
+};
+
+	
 
   const fetchMovimentacoes = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/movimentacoes', {
-        params: {
-          setorOrigem,
-          setorDestino,
-          dataInicio,
-          dataFim,
-          status,
-          colaborador,
-          modelo
-        }
-      });
-      setMovimentacoes(response.data);
+      const response = await api.get('/movimentacoes');
+      setMovimentacoes(response.data); // Armazena todos os dados
+      setFilteredMovimentacoes(response.data); // Inicialmente, os dados filtrados são todos os dados
     } catch (error) {
       setError('Erro ao carregar as movimentações.');
     } finally {
@@ -40,19 +60,20 @@ const HistorialPage: React.FC = () => {
     }
   };
 
-  const debouncedFetch = debounce(fetchMovimentacoes, 2000);
+  const debouncedFilter = debounce(filterMovimentacoes, 2000); // Função de filtro com debounce
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (name === 'setorOrigem') setSetorOrigem(value);
-    if (name === 'setorDestino') setSetorDestino(value);
-    if (name === 'dataInicio') setDataInicio(value);
-    if (name === 'dataFim') setDataFim(value);
-    if (name === 'status') setStatus(value);
-    if (name === 'colaborador') setColaborador(value);
-    if (name === 'modelo') setModelo(value);
-    debouncedFetch();
-  };
+		const { name, value } = e.target;
+		if (name === 'setorOrigem') setSetorOrigem(value);
+		if (name === 'dataInicio') setDataInicio(value);
+		if (name === 'dataFim') setDataFim(value);
+		if (name === 'status') setStatus(value);
+		if (name === 'colaborador') setColaborador(value);
+		if (name === 'modelo') setModelo(value);
+	
+		debouncedFilter(); // Chama a função de filtro após debounce
+	};
+	
 
   useEffect(() => {
     fetchMovimentacoes();
@@ -61,7 +82,7 @@ const HistorialPage: React.FC = () => {
   return (
     <Box sx={{ padding: 3 }}>
       <Typography variant="h4" gutterBottom>Consulta e Relatórios de Movimentações</Typography>
-      
+
       {/* Filtros */}
       <Grid container spacing={2}>
         <Grid item xs={4}>
@@ -70,15 +91,6 @@ const HistorialPage: React.FC = () => {
             fullWidth
             name="setorOrigem"
             value={setorOrigem}
-            onChange={handleChange}
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <TextField
-            label="Setor de Destino"
-            fullWidth
-            name="setorDestino"
-            value={setorDestino}
             onChange={handleChange}
           />
         </Grid>
@@ -132,7 +144,7 @@ const HistorialPage: React.FC = () => {
           />
         </Grid>
       </Grid>
-      
+
       {/* Exibindo a tabela de movimentações */}
       {loading ? (
         <CircularProgress />
@@ -147,21 +159,19 @@ const HistorialPage: React.FC = () => {
               <TableRow>
                 <TableCell>Data/Hora</TableCell>
                 <TableCell>Setor de Origem</TableCell>
-                <TableCell>Setor de Destino</TableCell>
                 <TableCell>Nome do Colaborador</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Modelo/Hostname</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {movimentacoes.map((movimentacao: any) => (
+              {filteredMovimentacoes.map((movimentacao: any) => (
                 <TableRow key={movimentacao.id}>
-                  <TableCell>{new Date(movimentacao.dataHora).toLocaleString()}</TableCell>
-                  <TableCell>{movimentacao.setorOrigem}</TableCell>
-                  <TableCell>{movimentacao.setorDestino}</TableCell>
+                  <TableCell>{format(new Date(movimentacao.dataMovimentacao), 'dd/MM/yyyy HH:mm')}</TableCell>
+                  <TableCell>{movimentacao.setorOrigem?.nome}</TableCell>
                   <TableCell>{movimentacao.nomeColaborador}</TableCell>
                   <TableCell>{movimentacao.status}</TableCell>
-                  <TableCell>{movimentacao.modelo}</TableCell>
+                  <TableCell>{movimentacao.coletor?.modelo + "/" + movimentacao.coletor?.hostname }</TableCell>
                 </TableRow>
               ))}
             </TableBody>

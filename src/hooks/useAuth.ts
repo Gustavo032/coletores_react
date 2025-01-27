@@ -1,17 +1,37 @@
-import { useState, useEffect } from 'react';
+import axios from "axios";
+import { useEffect, useState } from "react";
 
-// Hook para pegar informações do usuário autenticado
 export const useAuth = () => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ role: string; roles: string | string[] } | null>(null);
+  const [loading, setLoading] = useState(true);  // Para controlar a tela de carregamento
+  const [error, setError] = useState<string | null>(null); // Para armazenar erros
+
+  const fetchUser = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setLoading(false);  // Se não houver token, parar o loading
+      return;
+    }
+
+    try {
+      const response = await axios.get('http://localhost:3333/users/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setUser(response.data.user);
+    } catch (error) {
+      console.error('Erro ao buscar usuário:', error);
+      setUser(null);
+    } finally {
+      setLoading(false); // Parar o loading depois de tentar
+    }
+  };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');  // ou sessionStorage
-    if (token) {
-      // Verifique o token e recupere as informações do usuário
-      const decodedUser = JSON.parse(atob(token.split('.')[1]));  // Decodifica o JWT
-      setUser(decodedUser);
-    }
-  }, []);
+    fetchUser(); // Chama fetchUser para pegar os dados do usuário ao montar o hook
+  }, []); // Só chama uma vez quando o hook é montado
 
-  return { user };
+  return { user, loading, fetchUser };
 };
