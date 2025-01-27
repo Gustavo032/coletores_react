@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api';  // Substitua pela URL do seu back-end
+const API_URL = 'http://localhost:3333';  // Substitua pela URL do seu back-end
 
 export const login = async (email: string, password: string) => {
   try {
