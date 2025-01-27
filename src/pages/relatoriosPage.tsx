@@ -1,27 +1,41 @@
-// src/pages/RelatoriosPage.tsx
-
 import React, { useState, useEffect } from 'react';
-import { Box, Grid, TextField, Button, Typography, CircularProgress, Snackbar } from '@mui/material';
+import { Box, Grid, Button, Typography, CircularProgress, Snackbar, Alert } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
-import axios from 'axios';
-import { Alert } from '@mui/lab';
+import { api } from '../api';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const RelatoriosPage: React.FC = () => {
-  const [setor, setSetor] = useState('');
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
   const [relatorioData, setRelatorioData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Função para formatar o mês atual no formato YYYY-MM
+  const getCurrentMonth = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Mês atual
+    return `${year}-${month}-01`; // Data de início do mês
+  };
+
+  // Função para obter o último dia do mês
+  const getEndOfMonth = () => {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 1);
+    date.setDate(0); // Último dia do mês
+    return date.toISOString().split('T')[0];
+  };
+
   const fetchRelatorio = async () => {
     setLoading(true);
+
     try {
-      const response = await axios.get('http://localhost:5000/api/relatorios/movimentacoes', {
-        params: { setor, dataInicio, dataFim }
+      const response = await api.get('/movimentacoes', {
+        params: {
+          dataInicio: getCurrentMonth(),
+          dataFim: getEndOfMonth(),
+        },
       });
       setRelatorioData(response.data);
     } catch (error) {
@@ -51,39 +65,7 @@ const RelatoriosPage: React.FC = () => {
   return (
     <Box sx={{ padding: 3 }}>
       <Typography variant="h4" gutterBottom>Relatórios de Movimentações</Typography>
-      
-      {/* Filtros */}
-      <Grid container spacing={2}>
-        <Grid item xs={4}>
-          <TextField
-            label="Setor"
-            fullWidth
-            value={setor}
-            onChange={(e) => setSetor(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <TextField
-            type="date"
-            label="Data Início"
-            fullWidth
-            value={dataInicio}
-            onChange={(e) => setDataInicio(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <TextField
-            type="date"
-            label="Data Fim"
-            fullWidth
-            value={dataFim}
-            onChange={(e) => setDataFim(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-        </Grid>
-      </Grid>
-      
+
       <Button
         variant="contained"
         color="primary"

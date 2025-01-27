@@ -10,6 +10,8 @@ import SetoresPage from './pages/setoresPage';
 import EditSetorPage from './pages/editarSetorPage';
 import AddSetorPage from './pages/addSetorPage';
 import HistorialPage from './pages/historialPage';
+import EditUserPage from './pages/editUserPage';
+import RelatoriosPage from './pages/relatoriosPage';
 
 const App: React.FC = () => {
   return (
@@ -21,11 +23,14 @@ const App: React.FC = () => {
         <Route path="/movimentacao" element={<MovimentacaoPage />} />
         <Route path="/setores" element={<SetoresPage />} />
         <Route path="/historic" element={<HistorialPage />} />
+        <Route path="/relatorios" element={<RelatoriosPage />} />
         <Route path="/usuarios" element={<UsuariosPage />} />
+				<Route path="/usuarios/editar/:userId" element={<EditUserPage />} />
 				
 				<Route path="/setores/adicionar" element={<AddSetorPage />} />
 				<Route path="/setores/editar/:id" element={<EditSetorPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
 
       </Routes>
     </Router>
