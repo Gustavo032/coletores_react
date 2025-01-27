@@ -1,45 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Grid, Button, Typography, CircularProgress, Snackbar, Alert } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Grid, Typography, CircularProgress, Snackbar } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { Alert } from '@mui/lab';
 import { api } from '../api';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const RelatoriosPage: React.FC = () => {
-  const [relatorioData, setRelatorioData] = useState<any>(null);
+  const [relatorioData, setRelatorioData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Função para formatar o mês atual no formato YYYY-MM
-  const getCurrentMonth = () => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Mês atual
-    return `${year}-${month}-01`; // Data de início do mês
-  };
-
-  // Função para obter o último dia do mês
-  const getEndOfMonth = () => {
-    const date = new Date();
-    date.setMonth(date.getMonth() + 1);
-    date.setDate(0); // Último dia do mês
-    return date.toISOString().split('T')[0];
+  // Função para obter o mês atual em formato ISO
+  const getCurrentMonthRange = () => {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    return { startDate, endDate };
   };
 
   const fetchRelatorio = async () => {
     setLoading(true);
+    setError('');
+
+    const { startDate, endDate } = getCurrentMonthRange();
 
     try {
-      const response = await api.get('/movimentacoes', {
-        params: {
-          dataInicio: getCurrentMonth(),
-          dataFim: getEndOfMonth(),
-        },
-      });
+      const response = await api.get('/movimentacoes', { params: { dataInicio: startDate, dataFim: endDate } });
       setRelatorioData(response.data);
-    } catch (error) {
-      setError('Erro ao carregar o relatório');
+    } catch (err) {
+      setError('Erro ao carregar os dados do relatório.');
     } finally {
       setLoading(false);
     }
@@ -49,43 +40,44 @@ const RelatoriosPage: React.FC = () => {
     fetchRelatorio();
   }, []);
 
-  const chartData = {
-    labels: relatorioData ? relatorioData.dates : [],
-    datasets: [
-      {
-        label: 'Movimentações por Data',
-        data: relatorioData ? relatorioData.movimentacoesPorData : [],
-        borderColor: 'rgba(75,192,192,1)',
-        backgroundColor: 'rgba(75,192,192,0.2)',
-        fill: true,
-      },
-    ],
+  const renderCharts = () => {
+    if (relatorioData.length === 0) {
+      return <Typography>Sem dados disponíveis para o mês atual.</Typography>;
+    }
+
+    return relatorioData.map((setor, index) => (
+      <Box key={index} sx={{ marginBottom: 3 }}>
+        <Typography variant="h6">{setor.name}</Typography>
+        <Line
+          data={{
+            labels: setor.dates,
+            datasets: [
+              {
+                label: 'Movimentações',
+                data: setor.movimentacoesPorData,
+                borderColor: 'rgba(75,192,192,1)',
+                backgroundColor: 'rgba(75,192,192,0.2)',
+                fill: true,
+              },
+            ],
+          }}
+        />
+      </Box>
+    ));
   };
 
   return (
     <Box sx={{ padding: 3 }}>
       <Typography variant="h4" gutterBottom>Relatórios de Movimentações</Typography>
 
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={fetchRelatorio}
-        sx={{ marginTop: 2 }}
-      >
-        Gerar Relatório
-      </Button>
-
-      {/* Gráfico */}
       {loading ? (
-        <CircularProgress sx={{ marginTop: 2 }} />
+        <CircularProgress />
       ) : error ? (
         <Snackbar open={!!error} autoHideDuration={6000}>
           <Alert severity="error">{error}</Alert>
         </Snackbar>
       ) : (
-        <Box sx={{ marginTop: 3 }}>
-          <Line data={chartData} />
-        </Box>
+        <Box sx={{ marginTop: 3 }}>{renderCharts()}</Box>
       )}
     </Box>
   );
