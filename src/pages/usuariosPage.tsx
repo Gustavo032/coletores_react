@@ -1,95 +1,93 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Container, Grid2, Paper, Typography, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Button, Container, Grid, Paper, Typography, Box, Modal } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';  // Hook para pegar informações de usuário logado
+import { useAuth } from '../hooks/useAuth';
 import { api } from '../api';
+import AddEditUserModal from '../components/addEditUserModal';
 
 const UsuariosPage = () => {
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const { user, loading: userLoading } = useAuth();  // Pegando o usuário logado e o estado de carregamento do usuário
-  const navigate = useNavigate();  // Usando useNavigate
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+  const { user, loading: userLoading } = useAuth();
+  const navigate = useNavigate();
   const token = localStorage.getItem('token');
-  console.log('Token recuperado na UsuariosPage:', token);
 
   useEffect(() => {
-    // Verifique se o usuário ainda está sendo carregado
     if (userLoading) return;
-
-    console.log('Usuário na UsuariosPage:', user); // Adicionando mais informações
-
-    // Converte o campo 'roles' para array se for uma string
-    const roles = Array.isArray(user?.roles) ? user.roles : JSON.parse(user?.roles || '[]');
-
-    // Checando as roles do usuário
-    if (!user || (!roles.includes('fullAdmin') && !roles.includes('admin'))) {
-      console.log('Redirecionando para unauthorized devido à role do usuário.');
-      navigate('/unauthorized');
+    if (token) {
+      fetchUsuarios();
     } else {
-      console.log('Usuário autorizado, carregando usuários...');
-      api
-        .get('/users', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => {
-          setUsuarios(response.data.users);
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error('Erro ao carregar usuários:', error);
-          setLoading(false);
-        });
+      navigate('/login');
     }
-  }, [user, userLoading, navigate]);
+  }, [userLoading]);
 
-  const handleEditPermissions = (id: number) => {
-    navigate(`/usuarios/editar/${id}`);
+  const fetchUsuarios = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get('/users');
+      setUsuarios(response.data.users);
+    } catch (error) {
+      console.error('Erro ao buscar usuários', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleChangePermissions = (id: number, permission: string) => {
-    api.patch(`/users/${id}/permissions`, { permission })
-      .then(() => {
-        setUsuarios(usuarios.map(usuario => 
-          usuario.id === id ? { ...usuario, role: permission } : usuario
-        ));
-      })
-      .catch(error => {
-        console.error('Erro ao alterar permissões:', error);
-      });
+  const handleAddUser = () => {
+    setModalMode('add');
+    setModalOpen(true);
+  };
+
+  const handleEditUser = (user: any) => {
+    setModalMode('edit');
+    setSelectedUser(user);
+    setModalOpen(true);
+  };
+
+  const handleModalClose = (updatedUser: any | null) => {
+    setModalOpen(false);
+    if (updatedUser) {
+      if (modalMode === 'add') {
+        setUsuarios([...usuarios, updatedUser]);
+      } else {
+        setUsuarios(usuarios.map((user) => (user.id === updatedUser.id ? updatedUser : user)));
+      }
+    }
   };
 
   return (
     <Container>
-      <Typography variant="h4" gutterBottom>
-        Gerenciamento de Usuários
-      </Typography>
-      {loading ? (
-        <Typography>Carregando usuários...</Typography>
-      ) : (
-        <Grid2 container spacing={2}>
-          {usuarios.map(usuario => (
-            <Grid2 key={usuario.id} size={{xs:12, sm:6, md:4}}>
-              <Paper elevation={3} sx={{ padding: 2 }}>
-                <Typography variant="h6">{usuario.nome}</Typography>
-                <Typography variant="body2">Email: {usuario.email}</Typography>
-                <FormControl fullWidth>
-                  <InputLabel>Permissão</InputLabel>
-                  <Select
-                    value={usuario.role}
-                    onChange={(e) => handleChangePermissions(usuario.id, e.target.value)}
-                    label="Permissão"
-                  >
-                    <MenuItem value="admin">Administrador</MenuItem>
-                    <MenuItem value="admin_setor">Administrador de Setor</MenuItem>
-                    <MenuItem value="usuario">Usuário</MenuItem>
-                  </Select>
-                </FormControl>
-                <Button variant="outlined" color="primary" onClick={() => handleEditPermissions(usuario.id)}>Editar</Button>
-              </Paper>
-            </Grid2>
-          ))}
-        </Grid2>
-      )}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 2 }}>
+        <Button variant="contained" onClick={handleAddUser}>Adicionar Usuário</Button>
+      </Box>
+      <Grid container spacing={2}>
+        {usuarios.map((user) => (
+          <Grid item xs={12} sm={6} md={4} key={user.id}>
+            <Paper elevation={3} sx={{ padding: 2 }}>
+              <Typography variant="h6">{user.fullName}</Typography>
+              <Typography>{user.email}</Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => handleEditUser(user)}
+                sx={{ marginTop: 2 }}
+              >
+                Editar
+              </Button>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+        <AddEditUserModal
+          mode={modalMode}
+          user={selectedUser}
+          onClose={handleModalClose}
+        />
+      </Modal>
     </Container>
   );
 };
