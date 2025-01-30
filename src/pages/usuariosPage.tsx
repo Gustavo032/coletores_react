@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Container, Grid, Paper, Typography, Box, Modal } from '@mui/material';
+import { Button, Container, Grid, Paper, Typography, Box, Modal, CircularProgress, IconButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../api';
 import AddEditUserModal from '../components/addEditUserModal';
+import { ArrowBack } from '@mui/icons-material';
 
 const UsuariosPage = () => {
   const [usuarios, setUsuarios] = useState<any[]>([]);
@@ -57,38 +58,141 @@ const UsuariosPage = () => {
       }
     }
   };
+// Função para definir a cor do cargo
+function getRoleColor(role) {
+  switch (role) {
+    case 'admin':
+      return '#ff4747'; // Vermelho para admin
+    case 'user':
+      return '#28a745'; // Verde para user
+    case 'manager':
+      return '#ffc107'; // Amarelo para manager
+    default:
+      return '#007fff'; // Azul padrão
+  }
+}
 
   return (
-    <Container>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 2 }}>
-        <Button variant="contained" onClick={handleAddUser}>Adicionar Usuário</Button>
-      </Box>
-      <Grid container spacing={2}>
-        {usuarios.map((user) => (
-          <Grid item xs={12} sm={6} md={4} key={user.id}>
-            <Paper elevation={3} sx={{ padding: 2 }}>
-              <Typography variant="h6">{user.fullName}</Typography>
-              <Typography>{user.email}</Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => handleEditUser(user)}
-                sx={{ marginTop: 2 }}
-              >
-                Editar
-              </Button>
-            </Paper>
-          </Grid>
-        ))}
-      </Grid>
+    <Box sx={{ 
+			padding: 3, 
+			background: 'linear-gradient(135deg, #007aff, #00c4b4)',
+			minHeight: '100vh',
+			display: 'flex',
+			flexDirection: 'column',
+			alignItems: 'center'
+		}}>
+				<IconButton onClick={() => navigate('/home')} sx={{ alignSelf: 'flex-start', color: 'white' }}>
+		 <ArrowBack fontSize="large" />
+	 </IconButton>
+      <Paper
+        elevation={4}
+        sx={{
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          borderRadius: 4,
+          padding: 4,
+          maxWidth: 800,
+          textAlign: 'center',
+          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.2)',
+          width: '100%',
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#007fff', marginBottom: 2 }}>
+          Gerenciamento de Usuários
+        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'center', marginBottom: 3 }}>
+          <Button
+            variant="contained"
+            onClick={handleAddUser}
+            sx={{
+              backgroundColor: '#007fff',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              borderRadius: '8px',
+              padding: '10px 20px',
+              '&:hover': { backgroundColor: '#005bbb' },
+            }}
+          >
+            Adicionar Usuário
+          </Button>
+        </Box>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
+            <CircularProgress color="primary" />
+          </Box>
+        ) : (
+<Grid container spacing={3} justifyContent="center">
+  {usuarios.map((user) => (
+    <Grid item xs={12} sm={6} md={4} key={user.id}>
+      <Paper
+        elevation={3}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: 3,
+          borderRadius: '10px',
+          backgroundColor: '#f5f5f5',
+          textAlign: 'initial',
+          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
+          transition: '0.3s',
+          minHeight: '300px',
+          '&:hover': { transform: 'scale(1.05)', boxShadow: '0px 6px 20px rgba(0, 0, 0, 0.3)' },
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#007fff' }}>
+          {user.fullName}
+        </Typography>
+        
+        <Typography sx={{ color: '#333' }}>{user.email}</Typography>
+
+        {/* Exibe o setor do usuário */}
+        <Typography sx={{ color: '#555', fontSize: '0.9rem', marginTop: 1 }}>
+          <strong>Setor:</strong> {user.sector.nome}
+        </Typography>
+
+        {/* Destacar o cargo com cores e um pequeno ícone */}
+        <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 1 }}>
+          <Typography
+            sx={{
+              color: '#fff',
+              backgroundColor: getRoleColor(user.role),
+              padding: '6px 12px',
+              borderRadius: '16px',
+              fontWeight: 'bold',
+              fontSize: '0.9rem',
+              textTransform: 'capitalize',
+            }}
+          >
+            {user.role}
+          </Typography>
+        </Box>
+
+        <Button
+          variant="contained"
+          onClick={() => handleEditUser(user)}
+          sx={{
+            marginTop: 2,
+            backgroundColor: '#007fff',
+            fontWeight: 'bold',
+            borderRadius: '8px',
+            padding: '8px 16px',
+            '&:hover': { backgroundColor: '#005bbb' },
+          }}
+        >
+          Editar
+        </Button>
+      </Paper>
+    </Grid>
+  ))}
+</Grid>
+
+				
+        )}
+      </Paper>
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-        <AddEditUserModal
-          mode={modalMode}
-          user={selectedUser}
-          onClose={handleModalClose}
-        />
+        <AddEditUserModal mode={modalMode} user={selectedUser} onClose={handleModalClose} />
       </Modal>
-    </Container>
+    </Box>
   );
 };
 

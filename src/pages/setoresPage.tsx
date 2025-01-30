@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Container, Grid, Paper, Typography, Modal, Box } from '@mui/material';
+import { Button, Container, Grid, Paper, Typography, Modal, Box, IconButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../api';
 import AddEditSetorModal from '../components/addEditSetorModal';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'; // Importando o ícone
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { ArrowBack } from '@mui/icons-material';
 
 const SetoresPage = () => {
   const [setores, setSetores] = useState<any[]>([]);
@@ -66,44 +67,30 @@ const SetoresPage = () => {
       if (modalMode === 'add') {
         setSetores([...setores, updatedSetor]);
       } else {
-        setSetores(
-          setores.map((setor) => (setor.id === updatedSetor.id ? updatedSetor : setor))
-        );
+        setSetores(setores.map((setor) => (setor.id === updatedSetor.id ? updatedSetor : setor)));
       }
     }
   };
 
   return (
-    <Box
-      sx={{
-        background: 'linear-gradient(135deg, #2C3E50, #3498DB)', // Gradiente azul
-        minHeight: '100vh',
-        width: '100vw', // Garantir que ocupe toda a largura da tela
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'relative', // Para permitir o posicionamento absoluto da seta
-      }}
-    >
-      {/* Seta de Voltar */}
-      <Button
-        onClick={() => navigate('/home')}
-        sx={{
-          position: 'absolute',
-          top: 20,
-          left: 20,
-          zIndex: 1000, // Para garantir que a seta fique acima de outros elementos
-          color: 'white',
-        }}
-      >
-        <ArrowBackIcon />
-      </Button>
+		<Box sx={{ 
+			padding: 3, 
+			background: 'linear-gradient(135deg, #007aff, #00c4b4)',
+			minHeight: '100vh',
+			display: 'flex',
+			flexDirection: 'column',
+			alignItems: 'center'
+		}}>
+				<IconButton onClick={() => navigate('/home')} sx={{ alignSelf: 'flex-start', color: 'white' }}>
+		 <ArrowBack fontSize="large" />
+	 </IconButton>
 
-      <Box
+      <Paper
+        elevation={6}
         sx={{
-          backgroundColor: 'white',
-          padding: 3,
-          borderRadius: 2,
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          padding: 4,
+          borderRadius: 3,
           width: '80%',
           maxWidth: '1200px',
         }}
@@ -117,28 +104,39 @@ const SetoresPage = () => {
           <Grid container spacing={3}>
             {setores.map((setor) => (
               <Grid key={setor.id} item xs={12} sm={6} md={4}>
-                <Paper elevation={3} sx={{ padding: 2 }}>
+                <Paper
+                  elevation={3}
+                  sx={{
+                    padding: 2,
+                    borderRadius: 2,
+                    backgroundColor: '#F8F9FA',
+                    '&:hover': { backgroundColor: '#E3E6E8' },
+                    transition: '0.3s',
+                  }}
+                >
                   <Typography variant="h6" color="primary">
                     {setor.nome}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
                     ID: {setor.id}
                   </Typography>
-                  <Grid container spacing={1}>
+                  <Grid container spacing={1} sx={{ marginTop: 1 }}>
                     <Grid item>
                       <Button
-                        variant="outlined"
+                        variant="contained"
                         color="primary"
                         onClick={() => openEditModal(setor)}
+                        sx={{ borderRadius: 2 }}
                       >
                         Editar
                       </Button>
                     </Grid>
                     <Grid item>
                       <Button
-                        variant="outlined"
+                        variant="contained"
                         color="secondary"
                         onClick={() => handleDeleteSetor(setor.id)}
+                        sx={{ borderRadius: 2 }}
                       >
                         Excluir
                       </Button>
@@ -154,12 +152,17 @@ const SetoresPage = () => {
             variant="contained"
             color="primary"
             onClick={openAddModal}
-            sx={{ padding: '10px 20px' }}
+            sx={{
+              padding: '10px 20px',
+              borderRadius: 3,
+              backgroundColor: '#1E88E5',
+              '&:hover': { backgroundColor: '#1565C0' },
+            }}
           >
             Adicionar Setor
           </Button>
         </Box>
-      </Box>
+      </Paper>
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <Box sx={{ maxWidth: 600, margin: 'auto', marginTop: '10%', padding: 2 }}>

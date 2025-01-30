@@ -9,10 +9,10 @@ const HomePage: React.FC = () => {
     { label: 'Movimentação', path: '/movimentacao' },
     { label: 'Setores', path: '/setores' },
     { label: 'Histórico', path: '/historic' },
-    { label: 'Relatórios', path: '/relatorios' },
+    // { label: 'Relatórios', path: '/relatorios' },
     { label: 'Usuários', path: '/usuarios' },
-    { label: 'Adicionar Setor', path: '/setores/adicionar' },
-    { label: 'Página Não Autorizada', path: '/unauthorized' },
+    // { label: 'Adicionar Setor', path: '/setores/adicionar' },
+    // { label: 'Página Não Autorizada', path: '/unauthorized' },
   ];
 
   return (

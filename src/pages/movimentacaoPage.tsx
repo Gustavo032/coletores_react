@@ -12,9 +12,7 @@ const MovimentacaoPage: React.FC = () => {
   const setorOrigem = 'setorX'; // Substitua com a lógica real para obter o setor do JWT
 
   return (
-    <Container maxWidth="md">
       <MovimentacaoForm setorOrigem={setorOrigem} />
-    </Container>
   );
 };
 
