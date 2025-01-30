@@ -12,7 +12,7 @@ const HistorialPage: React.FC = () => {
   const [dataFim, setDataFim] = useState('');
   const [status, setStatus] = useState('');
   const [colaborador, setColaborador] = useState('');
-  const [modelo, setModelo] = useState('');
+  const [hostname, setHostname] = useState('');
   const [movimentacoes, setMovimentacoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -27,7 +27,7 @@ const HistorialPage: React.FC = () => {
       if (dataFim) params.dataFim = dataFim;
       if (status) params.status = status;
       if (colaborador) params.nomeColaborador = colaborador;
-      if (modelo) params.coletorId = modelo;
+      if (hostname) params.hostname = hostname;
 
       const response = await api.get('/movimentacoes', { params });
       setMovimentacoes(response.data);
@@ -40,7 +40,7 @@ const HistorialPage: React.FC = () => {
 
   useEffect(() => {
     fetchMovimentacoes();
-  }, [setorOrigem, dataInicio, dataFim, status, colaborador, modelo]);
+  }, [setorOrigem, dataInicio, dataFim, status, colaborador, hostname]);
 
   return (
     <Box sx={{ 
@@ -66,7 +66,7 @@ const HistorialPage: React.FC = () => {
           <TextField type="date" label="Data Fim" value={dataFim} onChange={(e) => setDataFim(e.target.value)} InputLabelProps={{ shrink: true }} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
           <TextField label="Status" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
           <TextField label="Colaborador" value={colaborador} onChange={(e) => setColaborador(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
-          <TextField label="Modelo/Hostname" value={modelo} onChange={(e) => setModelo(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
+          <TextField label="Hostname" value={hostname} onChange={(e) => setHostname(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
         </Box>
 
         {loading ? (
@@ -84,7 +84,7 @@ const HistorialPage: React.FC = () => {
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Setor de Origem</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Nome do Colaborador</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Status</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Modelo/Hostname</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Hostname</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -94,7 +94,7 @@ const HistorialPage: React.FC = () => {
                     <TableCell>{movimentacao.setorOrigem?.nome}</TableCell>
                     <TableCell>{movimentacao.nomeColaborador}</TableCell>
                     <TableCell>{movimentacao.status}</TableCell>
-                    <TableCell>{movimentacao.coletor?.modelo}/{movimentacao.coletor?.hostname}</TableCell>
+                    <TableCell>{movimentacao.coletor?.hostname}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

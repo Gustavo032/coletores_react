@@ -23,7 +23,8 @@ const HomePage: React.FC = () => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #007fff, #00e1ff)',
+      background: 'linear-gradient(135deg, #007aff, #00c4b4)',
+      // background: 'linear-gradient(135deg, #007fff, #00e1ff)',
         color: '#fff',
         padding: 4,
       }}
