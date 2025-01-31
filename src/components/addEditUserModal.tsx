@@ -187,7 +187,7 @@ const AddEditUserModal: React.FC<AddEditUserModalProps> = ({ mode, user, onClose
             >
               {sectors.map((sector) => (
                 <MenuItem key={sector.id} value={sector.id}>
-                  {sector.nome}
+                  {sector?.nome}
                 </MenuItem>
               ))}
             </Select>

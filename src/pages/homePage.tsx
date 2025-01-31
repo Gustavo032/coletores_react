@@ -11,6 +11,7 @@ const HomePage: React.FC = () => {
     { label: 'Histórico', path: '/historic' },
     // { label: 'Relatórios', path: '/relatorios' },
     { label: 'Usuários', path: '/usuarios' },
+    { label: 'Coletores', path: '/coletores' },
     // { label: 'Adicionar Setor', path: '/setores/adicionar' },
     // { label: 'Página Não Autorizada', path: '/unauthorized' },
   ];

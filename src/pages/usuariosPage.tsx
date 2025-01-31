@@ -147,7 +147,7 @@ function getRoleColor(role) {
 
         {/* Exibe o setor do usuário */}
         <Typography sx={{ color: '#555', fontSize: '0.9rem', marginTop: 1 }}>
-          <strong>Setor:</strong> {user.sector.nome}
+          <strong>Setor:</strong> {user.sector?.nome}
         </Typography>
 
         {/* Destacar o cargo com cores e um pequeno ícone */}

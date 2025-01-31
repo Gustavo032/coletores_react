@@ -14,7 +14,7 @@ export const useAuth = () => {
     }
 
     try {
-      const response = await axios.get('http://localhost:3333/users/me', {
+      const response = await axios.get('http://10.71.8.20:8080/users/me', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
