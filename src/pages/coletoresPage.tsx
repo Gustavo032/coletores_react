@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Paper, Typography, Button, Grid, Snackbar, Alert, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import { Box, Paper, Typography, Button, Grid, Snackbar, Alert, TextField, MenuItem, Select, FormControl, InputLabel, IconButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import AddEditColetorModal from '../components/AddEditColetorModal';
+import { ArrowBack } from '@mui/icons-material';
 
 const ColetoresPage: React.FC = () => {
   const [coletores, setColetores] = useState<any[]>([]);
@@ -56,8 +57,18 @@ const ColetoresPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #007aff, #00c4b4)', padding: 4 }}>
-      <Paper elevation={4} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: 4, padding: 4, width: '100%', maxWidth: 900, boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.2)' }}>
+    
+     <Box sx={{ 
+              padding: 3, 
+              background: 'linear-gradient(135deg, #007aff, #00c4b4)',
+              minHeight: '100vh',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}>
+                <IconButton onClick={() => navigate('/home')} sx={{ alignSelf: 'flex-start', color: 'white' }}>
+              <ArrowBack fontSize="large" />
+            </IconButton><Paper elevation={4} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: 4, padding: 4, width: '100%', maxWidth: 900, boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.2)' }}>
         <Typography variant="h4" sx={{ marginBottom: 2, fontWeight: 'bold', color: '#007fff' }}>
           Gerenciar Coletores
         </Typography>

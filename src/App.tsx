@@ -13,6 +13,7 @@ import HistorialPage from './pages/historialPage';
 import EditUserPage from './pages/editUserPage';
 import RelatoriosPage from './pages/relatoriosPage';
 import ColetoresPage from './pages/coletoresPage';
+import DetalhesColetorPage from './pages/detalhesColetorPage';
 
 const App: React.FC = () => {
   return (
@@ -29,6 +30,7 @@ const App: React.FC = () => {
 				<Route path="/usuarios/editar/:userId" element={<EditUserPage />} />
 				
         <Route path="/coletores" element={<ColetoresPage />} />
+				<Route path="/coletores/:id" element={<DetalhesColetorPage />} />
 
 				<Route path="/setores/adicionar" element={<AddSetorPage />} />
 				<Route path="/setores/editar/:id" element={<EditSetorPage />} />
