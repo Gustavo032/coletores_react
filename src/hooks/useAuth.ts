@@ -14,7 +14,7 @@ export const useAuth = () => {
     }
 
     try {
-      const response = await axios.get('https://api-g.codematch.com.br:3381/users/me', {
+      const response = await axios.get('https://api-g.codematch.com.br/users/me', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
