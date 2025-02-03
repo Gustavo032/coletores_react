@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://10.71.8.20:8080';  // Substitua pela URL do seu back-end
+const API_URL = 'http://api-g.codematch.com.br:3380';  // Substitua pela URL do seu back-end
 
 export const login = async (email: string, password: string) => {
   try {
