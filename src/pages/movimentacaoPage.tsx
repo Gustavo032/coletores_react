@@ -3,7 +3,8 @@
 import React from 'react';
 import { Container } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import MovimentacaoForm from '../components/movimentacaoForm';
+import MovimentacaoForm from '../components/movimentacaoFormAntigo';
+import Movimentacao from '../components/movimentacaoForm';
 
 const MovimentacaoPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const MovimentacaoPage: React.FC = () => {
   const setorOrigem = 'setorX'; // Substitua com a lógica real para obter o setor do JWT
 
   return (
-      <MovimentacaoForm setorOrigem={setorOrigem} />
+      <Movimentacao  />
   );
 };
 

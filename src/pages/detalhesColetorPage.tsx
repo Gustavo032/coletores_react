@@ -73,31 +73,31 @@ const DetalhesColetorPage: React.FC = () => {
 
           {/* Exibindo as movimentações */}
           <Grid item xs={12}>
-  <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-    Movimentações:
-  </Typography>
-  {coletor.movimentacoes.length > 0 ? (
-    <Grid container spacing={2}>
-      {coletor.movimentacoes.map((movimentacao: any) => (
-        <Grid item xs={12} sm={6} key={movimentacao.id}>
-          <Paper sx={{ padding: 2, boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)' }}>
-            <Typography variant="body2">
-              Status: {movimentacao.status === 'entregue' ? 'Entregue' : 'Retirado'}
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              Movimentações:
             </Typography>
-            <Typography variant="body2">
-              Setor de Origem: {movimentacao.setorOrigem?.nome}  {/* Ajustado aqui */}
-            </Typography>
-            <Typography variant="body2">
-              Data: {new Date(movimentacao.dataMovimentacao).toLocaleString()}
-            </Typography>
-          </Paper>
-        </Grid>
-      ))}
-    </Grid>
-  ) : (
-    <Typography variant="body2">Não há movimentações registradas.</Typography>
-  )}
-</Grid>
+              {coletor.movimentacoes.length > 0 ? (
+              <Grid container spacing={2}>
+                {coletor.movimentacoes.map((movimentacao: any) => (
+                  <Grid item xs={12} sm={6} key={movimentacao.id}>
+                    <Paper sx={{ padding: 2, boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)' }}>
+                      <Typography variant="body2">
+                        Status: {movimentacao.status === 'entregue' ? 'Entregue' : 'Retirado'}
+                      </Typography>
+                      <Typography variant="body2">
+                        Setor de Origem: {movimentacao.setorOrigem?.nome}  {/* Ajustado aqui */}
+                      </Typography>
+                      <Typography variant="body2">
+                        Data: {new Date(movimentacao.dataMovimentacao).toLocaleString()}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <Typography variant="body2">Não há movimentações registradas.</Typography>
+            )}
+          </Grid>
 
         </Grid>
 
