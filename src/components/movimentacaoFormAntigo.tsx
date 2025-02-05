@@ -10,7 +10,7 @@
     setorOrigem: string;
   }
 
-  const MovimentacaoForm: React.FC<MovimentacaoFormProps> = ({ setorOrigem }) => {
+  const MovimentacaoFormAntigo: React.FC<MovimentacaoFormProps> = ({ setorOrigem }) => {
     const [tipo, setTipo] = useState<string>('normal');
     const [modelo, setModelo] = useState<string>('CT45');
     const [coletorId, setcoletorId] = useState<number | string>('');
@@ -52,7 +52,7 @@
       };
 
       try {
-        const response = await api.post('/movimentacoes', data);
+        const response = await api.post('/movimentacoesOld', data);
         alert('Movimentação registrada com sucesso!');
         setcoletorId('');
         setNomeColaborador('');
@@ -132,4 +132,4 @@
     );
   };
 
-  export default MovimentacaoForm;
+  export default MovimentacaoFormAntigo;

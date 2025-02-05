@@ -14,6 +14,7 @@ import EditUserPage from './pages/editUserPage';
 import RelatoriosPage from './pages/relatoriosPage';
 import ColetoresPage from './pages/coletoresPage';
 import DetalhesColetorPage from './pages/detalhesColetorPage';
+import MovimentacaoFormAntigo from './components/movimentacaoFormAntigo';
 
 const App: React.FC = () => {
   return (
@@ -23,6 +24,7 @@ const App: React.FC = () => {
         <Route path="/" element={<LoginPage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/movimentacao" element={<MovimentacaoPage />} />
+        <Route path="/movimentacaoOld" element={<MovimentacaoFormAntigo setorOrigem='setor x' />} />
         <Route path="/setores" element={<SetoresPage />} />
         <Route path="/historic" element={<HistorialPage />} />
         <Route path="/relatorios" element={<RelatoriosPage />} />
