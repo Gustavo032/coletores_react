@@ -1,29 +1,36 @@
 import React, { useState } from 'react';
-import { Box, Button, TextField, Typography, Paper, CircularProgress } from '@mui/material';
+import { Box, Button, TextField, Typography, Paper, CircularProgress, IconButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { ArrowBack } from '@mui/icons-material';
 
-const EscolhaAcao: React.FC<{ onSelect: (acao: string) => void }> = ({ onSelect }) => (
+const EscolhaAcao: React.FC<{    erro: string, 
+  setErro: (erro: string) => void,  onSelect: (acao: string) => void }> = ({ onSelect, erro, setErro }) => (
   <Box sx={{ textAlign: 'center' }}>
     <Typography variant="h5" gutterBottom>Selecione a ação:</Typography>
-    <Button variant="contained" color="primary" onClick={() => onSelect('Retirar')} sx={{ mr: 2 }}>Retirar</Button>
-    <Button variant="contained" color="secondary" onClick={() => onSelect('Entregar')}>Entregar</Button>
-  </Box>
+    <Button variant="contained" color="primary" onClick={() => {setErro(''); onSelect('Retirar')}} sx={{ mr: 2 }}>Retirar</Button>
+    <Button variant="contained" color="secondary" onClick={() => {setErro(''); onSelect('Entregar')}}>Entregar</Button>
+    {erro && <Typography marginTop="2rem  " color="error">{erro}</Typography>}
+    </Box>
 );
 
 const EntradaUUID: React.FC<{ 
-  titulo: string, 
-  onNext: (uuid: string) => void, 
-  erro: string, 
-  setErro: (erro: string) => void, 
-  tipo: 'user' | 'coletor' 
-}> = ({ titulo, onNext, erro, setErro, tipo }) => {
+    titulo: string, 
+    onNext: (uuid: string) => void, 
+    erro: string, 
+    setErro: (erro: string) => void, 
+    tipo: 'user' | 'coletor' ,
+    setEtapa: (etaoa: number) => void, 
+
+  }> = ({ titulo, onNext, erro, setErro, tipo, setEtapa }) => {
   const [uuid, setUuid] = useState('');
   const [loading, setLoading] = useState(false);
 
   const validarUUID = async () => {
     if (uuid.trim().length !== 36) {
       setErro('UUID inválido. Verifique e tente novamente.');
+      setEtapa(1)
+
       return;
     }
 
@@ -33,9 +40,19 @@ const EntradaUUID: React.FC<{
       setErro('');
       onNext(uuid);
     } catch (error: any) {
-      setErro(error.response?.data?.message || `UUID inválido. Verifique e tente novamente.`);
+      setErro("Erro ao validar UUID: " + error.response?.data?.message  || `UUID inválido. Verifique e tente novamente.`);
+      setUuid(''); // Reseta o valor do input em caso de erro
+      
+      setEtapa(1)
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    // Se o usuário pressionar "Enter", validamos o UUID
+    if (event.key === 'Enter') {
+      validarUUID();
     }
   };
 
@@ -43,12 +60,14 @@ const EntradaUUID: React.FC<{
     <Box sx={{ textAlign: 'center' }}>
       <Typography variant="h5" gutterBottom>{titulo}</Typography>
       <TextField
+        autoFocus={true}
         label="UUID"
         variant="outlined"
         fullWidth
         margin="normal"
         value={uuid}
         onChange={(e) => setUuid(e.target.value)}
+        onKeyDown={handleKeyDown}  // Adicionando o evento de tecla
       />
       <Button 
         variant="contained" 
@@ -101,6 +120,11 @@ const Movimentacao: React.FC = () => {
   };
 
   return (
+  <>
+    <IconButton onClick={() => navigate('/home')} sx={{  position:"absolute",  top:"2rem", left:"2rem", alignSelf: 'flex-start', color: 'white' }}>
+      <ArrowBack fontSize="large" />
+    </IconButton>
+
     <Box sx={{ 
       padding: 3, 
       background: 'linear-gradient(135deg, #007aff, #00c4b4)',
@@ -109,14 +133,18 @@ const Movimentacao: React.FC = () => {
       alignItems: 'center',
       justifyContent: 'center'
     }}>
+      
       <Paper elevation={4} sx={{ padding: 4, borderRadius: 3, maxWidth: 400, textAlign: 'center' }}>
-        {etapa === 1 && <EscolhaAcao onSelect={handleAcaoSelecionada} />}
-        {etapa === 2 && <EntradaUUID titulo="Escaneie o crachá do usuário" onNext={handleUsuarioUUID} erro={erro} setErro={setErro} tipo="user" />}
-        {etapa === 3 && <EntradaUUID titulo="Escaneie o código do coletor" onNext={handleColetorUUID} erro={erro} setErro={setErro} tipo="coletor" />}
+        {etapa === 1 && <EscolhaAcao onSelect={handleAcaoSelecionada} erro={erro} setErro={setErro} />}
+        {etapa === 2 && <EntradaUUID titulo="Escaneie o crachá do usuário" onNext={handleUsuarioUUID} erro={erro} setErro={setErro}  setEtapa={setEtapa} tipo="user" />}
+        {etapa === 3 && <EntradaUUID titulo="Escaneie o código do coletor" onNext={handleColetorUUID} erro={erro} setErro={setErro} setEtapa={setEtapa} tipo="coletor" />}
         {etapa === 4 && <Typography variant="h5" color="success">Movimentação concluída!</Typography>}
       </Paper>
     </Box>
+  </>
   );
+
+  
 };
 
 export default Movimentacao;
