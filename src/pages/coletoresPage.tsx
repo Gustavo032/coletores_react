@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import AddEditColetorModal from '../components/AddEditColetorModal';
 import { ArrowBack } from '@mui/icons-material';
+import QRCodeGenerator from '../components/QRCodeGenerator';
 
 const ColetoresPage: React.FC = () => {
   const [coletores, setColetores] = useState<any[]>([]);
@@ -13,6 +14,13 @@ const ColetoresPage: React.FC = () => {
   const [mode, setMode] = useState<'add' | 'edit'>('add');
   const [coletorToEdit, setColetorToEdit] = useState<any>(null);
   const navigate = useNavigate();
+  const [openQR, setOpenQR] = useState(false);
+  const [selectedUUID, setSelectedUUID] = useState<string | null>(null);
+
+  const handleOpenQR = (uuid: string) => {
+    setSelectedUUID(uuid);
+    setOpenQR(true);
+  };
 
   // Fetch coletores and sectors
   useEffect(() => {
@@ -98,18 +106,22 @@ const ColetoresPage: React.FC = () => {
                 <Typography variant="h6">{coletor.modelo}</Typography>
                 <Typography variant="body2">{coletor.hostname}</Typography>
                 <Typography variant="body2">Setor: {coletor.sector?.nome}</Typography>
-
-                <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column', marginTop: 1 }}>
+                <Button 
+                
+                variant="outlined"
+                sx={{ fontWeight:"bold", width: '100%' }}
+                onClick={() => handleOpenQR(coletor.id)}>Gerar QR Code</Button>
+                <Box sx={{  display: 'flex', gap: 1, flexDirection: 'column', marginTop: 1 }}>
                   <Button
-                    variant="outlined"
-                    color="secondary"
+                    variant="contained"
+                    color="warning"
                     onClick={() => navigate(`/coletores/${coletor.id}`)}
                     sx={{ width: '100%' }}
                   >
                     Detalhes
                   </Button>
                   <Button
-                    variant="outlined"
+                    variant="contained"
                     color="error"
                     onClick={() => handleDeleteColetor(coletor.id)}
                     sx={{ width: '100%' }}
@@ -117,7 +129,7 @@ const ColetoresPage: React.FC = () => {
                     Excluir
                   </Button>
                   <Button
-                    variant="outlined"
+                    variant="contained"
                     color="primary"
                     onClick={() => handleEditColetor(coletor)}
                     sx={{ width: '100%' }}
@@ -136,6 +148,10 @@ const ColetoresPage: React.FC = () => {
           {errorMessage}
         </Alert>
       </Snackbar>
+
+      {selectedUUID && (
+        <QRCodeGenerator uuid={selectedUUID} open={openQR} onClose={() => setOpenQR(false)} />
+      )}
 
       {openModal && (
         <AddEditColetorModal

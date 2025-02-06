@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, Alert, Snackbar, Button, IconButton } from '@mui/material';
+import { Box, TextField, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, Alert, Snackbar, Button, IconButton, TableSortLabel } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { api } from '../api';
 import { format } from 'date-fns';
@@ -16,6 +16,10 @@ const HistorialPage: React.FC = () => {
   const [movimentacoes, setMovimentacoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+
+  // Estados para ordenação
+  const [orderBy, setOrderBy] = useState<string>('dataMovimentacao');
+  const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc');
 
   const fetchMovimentacoes = async () => {
     setLoading(true);
@@ -41,6 +45,33 @@ const HistorialPage: React.FC = () => {
   useEffect(() => {
     fetchMovimentacoes();
   }, [setorOrigem, dataInicio, dataFim, status, colaborador, hostname]);
+
+  // Função para ordenar a lista com base na escolha do usuário
+  const sortedMovimentacoes = [...movimentacoes].sort((a, b) => {
+    const valueA = a[orderBy] || '';
+    const valueB = b[orderBy] || '';
+
+    if (typeof valueA === 'string' && typeof valueB === 'string') {
+      return orderDirection === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+    }
+
+    if (typeof valueA === 'number' && typeof valueB === 'number') {
+      return orderDirection === 'asc' ? valueA - valueB : valueB - valueA;
+    }
+
+    if (valueA instanceof Date && valueB instanceof Date) {
+      return orderDirection === 'asc' ? valueA.getTime() - valueB.getTime() : valueB.getTime() - valueA.getTime();
+    }
+
+    return 0;
+  });
+
+  // Manipulador de evento para ordenar por uma coluna específica
+  const handleSort = (column: string) => {
+    const isAsc = orderBy === column && orderDirection === 'asc';
+    setOrderBy(column);
+    setOrderDirection(isAsc ? 'desc' : 'asc');
+  };
 
   return (
     <Box sx={{ 
@@ -80,17 +111,29 @@ const HistorialPage: React.FC = () => {
             <Table>
               <TableHead sx={{ backgroundColor: '#007aff' }}>
                 <TableRow>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Data/Hora</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Setor de Origem</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Nome do Colaborador</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Status</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Hostname</TableCell>
+                  {[
+                    { label: 'Data/Hora', key: 'dataMovimentacao' },
+                    { label: 'Setor de Origem', key: 'setorOrigem.nome' },
+                    { label: 'Nome do Colaborador', key: 'nomeColaborador' },
+                    { label: 'Status', key: 'status' },
+                    { label: 'Hostname', key: 'coletor.hostname' }
+                  ].map((col) => (
+                    <TableCell key={col.key} sx={{ color: 'white', fontWeight: 'bold' }}>
+                      <TableSortLabel
+                        active={orderBy === col.key}
+                        direction={orderBy === col.key ? orderDirection : 'asc'}
+                        onClick={() => handleSort(col.key)}
+                      >
+                        {col.label}
+                      </TableSortLabel>
+                    </TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {movimentacoes.map((movimentacao: any) => (
+                {sortedMovimentacoes.map((movimentacao: any) => (
                   <TableRow key={movimentacao.id}>
-                    <TableCell>{movimentacao.dataMovimentacao ? format(new Date(movimentacao.dataMovimentacao), 'dd/MM/yyyy HH:mm') : 'Data inválida'}</TableCell>
+                    <TableCell>{format(new Date(movimentacao.dataMovimentacao), 'dd/MM/yyyy HH:mm')}</TableCell>
                     <TableCell>{movimentacao.setorOrigem?.nome}</TableCell>
                     <TableCell>{movimentacao.nomeColaborador}</TableCell>
                     <TableCell>{movimentacao.status}</TableCell>

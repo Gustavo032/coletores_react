@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { api } from '../api';
 import AddEditUserModal from '../components/addEditUserModal';
 import { ArrowBack } from '@mui/icons-material';
+import QRCodeGenerator from '../components/QRCodeGenerator';
 
 const UsuariosPage = () => {
   const [usuarios, setUsuarios] = useState<any[]>([]);
@@ -15,6 +16,13 @@ const UsuariosPage = () => {
   const { user, loading: userLoading } = useAuth();
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
+  const [openQR, setOpenQR] = useState(false);
+  const [selectedUUID, setSelectedUUID] = useState<string | null>(null);
+
+  const handleOpenQR = (uuid: string) => {
+    setSelectedUUID(uuid);
+    setOpenQR(true);
+  };
 
   useEffect(() => {
     if (userLoading) return;
@@ -129,28 +137,30 @@ function getRoleColor(role) {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
+          alignItems: 'center',
           padding: 3,
           borderRadius: '10px',
           backgroundColor: '#f5f5f5',
-          textAlign: 'initial',
+          textAlign: 'center',
           boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
           transition: '0.3s',
-          minHeight: '300px',
+          minHeight: '350px',
           '&:hover': { transform: 'scale(1.05)', boxShadow: '0px 6px 20px rgba(0, 0, 0, 0.3)' },
         }}
+        
       >
         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#007fff' }}>
           {user.fullName}
         </Typography>
         
-        <Typography sx={{ color: '#333' }}>{user.email}</Typography>
+        <Typography  sx={{textOverflow:"ellipsis",
+          overflow: "hidden",
+          whiteSpace: "nowrap", maxWidth: "-webkit-fill-available", color: '#333' }}>{user.email}</Typography>
 
-        {/* Exibe o setor do usuário */}
         <Typography sx={{ color: '#555', fontSize: '0.9rem', marginTop: 1 }}>
           <strong>Setor:</strong> {user.sector?.nome}
         </Typography>
 
-        {/* Destacar o cargo com cores e um pequeno ícone */}
         <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 1 }}>
           <Typography
             sx={{
@@ -167,11 +177,17 @@ function getRoleColor(role) {
           </Typography>
         </Box>
 
+       {/* Gerar QR Code */}
+        <Button 
+        variant="outlined"
+        color="info"
+        sx={{  marginTop: 2, fontWeight:"bold", width: '100%' }}
+        onClick={() => handleOpenQR(user.id)}>Gerar QR Code</Button>
         <Button
           variant="contained"
           onClick={() => handleEditUser(user)}
           sx={{
-            marginTop: 2,
+           
             backgroundColor: '#007fff',
             fontWeight: 'bold',
             borderRadius: '8px',
@@ -185,13 +201,15 @@ function getRoleColor(role) {
     </Grid>
   ))}
 </Grid>
-
 				
         )}
       </Paper>
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <AddEditUserModal mode={modalMode} user={selectedUser} onClose={handleModalClose} />
       </Modal>
+      {selectedUUID && (
+        <QRCodeGenerator uuid={selectedUUID} open={openQR} onClose={() => setOpenQR(false)} />
+      )}
     </Box>
   );
 };

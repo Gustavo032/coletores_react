@@ -13,7 +13,7 @@ const AddEditUserModal: React.FC<AddEditUserModalProps> = ({ mode, user, onClose
     fullName: '',
     email: '',
     password: '',
-    role: 'fullAdmin',
+    role: '',
     sector_id: null, // Inicializando com null
     roles: '["fullAdmin"]'
   });
