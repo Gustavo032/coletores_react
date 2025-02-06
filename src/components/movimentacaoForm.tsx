@@ -115,6 +115,7 @@ const Movimentacao: React.FC = () => {
       setEtapa(4);
       setTimeout(() => navigate('/home'), 3000);
     } catch (error: any) {
+      setEtapa(1);
       setErro(error.response?.data?.message || 'Erro ao criar movimentação.');
     }
   };
