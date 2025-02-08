@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Substitua com a URL correta da sua API (incluindo a porta)
 export const api = axios.create({
-  baseURL: 'http://localhost:3380', // Ajuste a URL de acordo com sua API
+  baseURL: 'https://api-g.codematch.com.br', // Ajuste a URL de acordo com sua API
 });
 
 api.interceptors.request.use(
