@@ -73,6 +73,30 @@ const HistorialPage: React.FC = () => {
     setOrderDirection(isAsc ? 'desc' : 'asc');
   };
 
+  // Função para agrupar movimentações de "retirado" e "entregue" com base em movimentacaoReferenciaId
+  const groupMovimentacoes = () => {
+    const groupedMovimentacoes: any = [];
+
+    movimentacoes.forEach((mov) => {
+      if (mov.movimentacaoReferenciaId) {
+        const reference = groupedMovimentacoes.find((item: any) => item.id === mov.movimentacaoReferenciaId);
+        if (reference) {
+          reference.entregue = mov;
+        }
+      } else {
+        groupedMovimentacoes.push({ id: mov.id, retirado: mov });
+      }
+    });
+
+    return groupedMovimentacoes;
+  };
+  
+  const entregues = movimentacoes.filter((mov) => mov.status === 'entregue').length;
+  const totalMovimentacoes = movimentacoes.length - entregues;
+  const retiradosSemEntrega = movimentacoes.filter((mov) => mov.status === 'retirado' && !mov.movimentacaoReferenciaId).length - entregues;
+  // const retirados = movimentacoes.filter((mov) => mov.status === 'retirado').length;
+
+
   return (
     <Box sx={{ 
       padding: 3, 
@@ -98,6 +122,29 @@ const HistorialPage: React.FC = () => {
           <TextField label="Status" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
           <TextField label="Colaborador" value={colaborador} onChange={(e) => setColaborador(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
           <TextField label="Hostname" value={hostname} onChange={(e) => setHostname(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
+        </Box>
+
+        {/* Legenda de Cores */}
+        <Box sx={{ marginBottom: 3, textAlign: 'center' }}>
+          <Typography variant="body1" color="blacks" alignItems={"center"} textAlign={"center"}>
+            <strong>Legenda de Cores:</strong>
+            <Box sx={{ display: 'inline-block', backgroundColor: '#00d60066', width: '20px', height: '20px', marginRight: '10px' }} />
+            Verde: Movimentação Entregue
+            <Box sx={{ display: 'inline-block', backgroundColor: '#ffeb3b', width: '20px', height: '20px', marginLeft: '20px', marginRight: '10px' }} />
+            Amarelo: Retirada realizada há mais de 8 horas
+            <Box sx={{ display: 'inline-block', backgroundColor: '#fff', width: '20px', height: '20px', marginLeft: '20px', marginRight: '10px' }} />
+            branco: Movimentação recente
+          </Typography>
+        </Box>
+
+        {/* Contagem das Movimentações */}
+        <Box sx={{ textAlign: 'center', marginBottom: 3 }}>
+          <Typography variant="h6" color="black">
+            Total: {totalMovimentacoes}
+          </Typography>
+          <Typography variant="body1" color="black">
+            Coletores Entregues: {entregues} | Coletores em uso: {retiradosSemEntrega}
+          </Typography>
         </Box>
 
         {loading ? (
@@ -131,15 +178,45 @@ const HistorialPage: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {sortedMovimentacoes.map((movimentacao: any) => (
-                  <TableRow key={movimentacao.id}>
-                    <TableCell>{format(new Date(movimentacao.dataMovimentacao), 'dd/MM/yyyy HH:mm')}</TableCell>
-                    <TableCell>{movimentacao.setorOrigem?.nome}</TableCell>
-                    <TableCell>{movimentacao.nomeColaborador}</TableCell>
-                    <TableCell>{movimentacao.status}</TableCell>
-                    <TableCell>{movimentacao.coletor?.hostname}</TableCell>
-                  </TableRow>
-                ))}
+                {groupMovimentacoes().map((movimentacao: any) => {
+                  // Função para calcular a diferença em horas
+                  const diffInHours = (date: Date) => {
+                    const now = new Date();
+                    return Math.abs(now.getTime() - new Date(date).getTime()) / (1000 * 3600);
+                  };
+
+                  // Determina o estilo da linha
+                  const rowStyle = movimentacao.entregue
+                    ? { backgroundColor: '#00d60066' } // Verde se houver entrega
+                    : diffInHours(movimentacao.retirado.dataMovimentacao) > 8
+                    ? { backgroundColor: '#ffeb3b' } // Amarelo se a retirada foi há mais de 8 horas
+                    : { backgroundColor: '#fffff' }; // Azul se não houver entrega e data recente
+
+                  return (
+                    <TableRow key={movimentacao.id} sx={rowStyle}>
+                      <TableCell>
+                        {format(new Date(movimentacao.retirado.dataMovimentacao), 'dd/MM/yyyy HH:mm')} 
+                        {movimentacao.entregue &&  <><br /><br /> {format(new Date(movimentacao.entregue.dataMovimentacao), 'dd/MM/yyyy HH:mm')}</>}
+                      </TableCell>
+                      <TableCell>
+                        {movimentacao.retirado.setorOrigem?.nome} 
+                        {movimentacao.entregue && <><br /><br /> {movimentacao.entregue.setorOrigem?.nome}</>}
+                      </TableCell>
+                      <TableCell>
+                        {movimentacao.retirado.nomeColaborador} 
+                        {movimentacao.entregue && <><br /><br /> {movimentacao.entregue.nomeColaborador}</>}
+                      </TableCell>
+                      <TableCell>
+                        {movimentacao.retirado.status} 
+                        {movimentacao.entregue &&  <><br /><br /> {movimentacao.entregue.status}</>}
+                      </TableCell>
+                      <TableCell>
+                        {movimentacao.retirado.coletor?.hostname}
+                        {movimentacao.entregue && <><br /><br />{movimentacao.entregue.coletor?.hostname}</>}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
