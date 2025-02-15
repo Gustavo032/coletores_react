@@ -15,6 +15,8 @@ import RelatoriosPage from './pages/relatoriosPage';
 import ColetoresPage from './pages/coletoresPage';
 import DetalhesColetorPage from './pages/detalhesColetorPage';
 import MovimentacaoFormAntigo from './components/movimentacaoFormAntigo';
+import NotAuthorizedPage from './pages/NotAuthorizedPage';
+import NotFound from './pages/notFoundPage';
 
 const App: React.FC = () => {
   return (
@@ -36,7 +38,9 @@ const App: React.FC = () => {
 
 				<Route path="/setores/adicionar" element={<AddSetorPage />} />
 				<Route path="/setores/editar/:id" element={<EditSetorPage />} />
-        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+        <Route path="/unauthorized" element={<NotAuthorizedPage />} />
+        <Route path="/notAuthorized" element={<NotAuthorizedPage />} />
+        <Route path="/*" element={<NotFound />} />
 
 
       </Routes>

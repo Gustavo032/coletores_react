@@ -4,10 +4,14 @@ import { ArrowBack } from '@mui/icons-material';
 import { api } from '../api';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const HistorialPage: React.FC = () => {
   const navigate = useNavigate();
   const [setorOrigem, setSetorOrigem] = useState('');
+  const { user, loading: loadingUser } = useAuth();  // Pegando as informações do usuário
+
+
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
   const [status, setStatus] = useState('');
@@ -26,13 +30,15 @@ const HistorialPage: React.FC = () => {
     setError('');
     try {
       const params: any = {};
-      if (setorOrigem) params.setorOrigemId = setorOrigem;
-      if (dataInicio) params.dataInicio = dataInicio;
-      if (dataFim) params.dataFim = dataFim;
+      if (setorOrigem) params.setorOrigem = setorOrigem;
+      if (dataInicio) params.dataInicio = dataInicio; // Verifique se está no formato correto
+      if (dataFim) params.dataFim = dataFim; // Verifique se está no formato correto
       if (status) params.status = status;
       if (colaborador) params.nomeColaborador = colaborador;
       if (hostname) params.hostname = hostname;
-
+  
+      console.log("Parametros da requisição:", params); // Adicionei um log aqui para inspecionar os parâmetros
+  
       const response = await api.get('/movimentacoes', { params });
       setMovimentacoes(response.data);
     } catch (error) {
@@ -40,11 +46,20 @@ const HistorialPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   useEffect(() => {
     fetchMovimentacoes();
   }, [setorOrigem, dataInicio, dataFim, status, colaborador, hostname]);
+  
+  useEffect(() => {
+    if (loadingUser) return;  // Espera carregar as informações do usuário
+
+    if (!user || !['admin', 'fullAdmin', 'user'].includes(user.role)) {
+      // Se o usuário não estiver logado ou não for admin/fullAdmin/user, redireciona para outra página
+      navigate('/not-authorized');  // Redireciona para uma página de "Não autorizado"
+    }
+  }, [user, loadingUser, navigate]);
 
   // Função para ordenar a lista com base na escolha do usuário
   const sortedMovimentacoes = [...movimentacoes].sort((a, b) => {
@@ -73,6 +88,12 @@ const HistorialPage: React.FC = () => {
     setOrderDirection(isAsc ? 'desc' : 'asc');
   };
 
+  // Função para calcular a diferença em horas
+  const diffInHours = (date: Date) => {
+    const now = new Date();
+    return Math.abs(now.getTime() - new Date(date).getTime()) / (1000 * 3600);
+  };
+
   // Função para agrupar movimentações de "retirado" e "entregue" com base em movimentacaoReferenciaId
   const groupMovimentacoes = () => {
     const groupedMovimentacoes: any = [];
@@ -90,12 +111,16 @@ const HistorialPage: React.FC = () => {
 
     return groupedMovimentacoes;
   };
-  
+
+  // Variáveis para contagens
   const entregues = movimentacoes.filter((mov) => mov.status === 'entregue').length;
   const totalMovimentacoes = movimentacoes.length - entregues;
-  const retiradosSemEntrega = movimentacoes.filter((mov) => mov.status === 'retirado' && !mov.movimentacaoReferenciaId).length - entregues;
-  // const retirados = movimentacoes.filter((mov) => mov.status === 'retirado').length;
 
+  // Coletores ausentes (retirado há mais de 8 horas)
+  const ausentes = movimentacoes.filter((mov) => mov.status === 'retirado' && diffInHours(mov.dataMovimentacao) > 8).length - entregues;
+
+  // Coletores em uso (retirado há menos de 8 horas)
+  const emUso = movimentacoes.filter((mov) => mov.status === 'retirado' && diffInHours(mov.dataMovimentacao) <= 8).length;
 
   return (
     <Box sx={{ 
@@ -116,34 +141,32 @@ const HistorialPage: React.FC = () => {
         </Typography>
 
         <Box display="flex" flexWrap="wrap" gap={2} justifyContent="center" sx={{ marginBottom: 3 }}>
-          <TextField label="Setor de Origem" value={setorOrigem} onChange={(e) => setSetorOrigem(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
+          <TextField label="Setor" value={setorOrigem} onChange={(e) => setSetorOrigem(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
           <TextField type="date" label="Data Início" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} InputLabelProps={{ shrink: true }} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
           <TextField type="date" label="Data Fim" value={dataFim} onChange={(e) => setDataFim(e.target.value)} InputLabelProps={{ shrink: true }} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
-          <TextField label="Status" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
+          {/* <TextField label="Status" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} /> */}
           <TextField label="Colaborador" value={colaborador} onChange={(e) => setColaborador(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
           <TextField label="Hostname" value={hostname} onChange={(e) => setHostname(e.target.value)} sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }} />
+        </Box>
+
+        <Box sx={{ textAlign: 'center', marginBottom: 3 }}>
+          <Typography variant="h6" color="black">
+            Total de Movimentações: {totalMovimentacoes}
+          </Typography>
+          <Typography variant="body1" color="black">
+            Coletores Entregues: {entregues} | Coletores Ausentes: {ausentes} | Coletores em Uso: {emUso}
+          </Typography>
         </Box>
 
         {/* Legenda de Cores */}
         <Box sx={{ marginBottom: 3, textAlign: 'center' }}>
           <Typography variant="body1" color="blacks" alignItems={"center"} textAlign={"center"}>
-            <strong>Legenda de Cores:</strong>
             <Box sx={{ display: 'inline-block', backgroundColor: '#00d60066', width: '20px', height: '20px', marginRight: '10px' }} />
             Verde: Movimentação Entregue
             <Box sx={{ display: 'inline-block', backgroundColor: '#ffeb3b', width: '20px', height: '20px', marginLeft: '20px', marginRight: '10px' }} />
             Amarelo: Retirada realizada há mais de 8 horas
             <Box sx={{ display: 'inline-block', backgroundColor: '#fff', width: '20px', height: '20px', marginLeft: '20px', marginRight: '10px' }} />
             branco: Movimentação recente
-          </Typography>
-        </Box>
-
-        {/* Contagem das Movimentações */}
-        <Box sx={{ textAlign: 'center', marginBottom: 3 }}>
-          <Typography variant="h6" color="black">
-            Total: {totalMovimentacoes}
-          </Typography>
-          <Typography variant="body1" color="black">
-            Coletores Entregues: {entregues} | Coletores em uso: {retiradosSemEntrega}
           </Typography>
         </Box>
 
@@ -158,13 +181,7 @@ const HistorialPage: React.FC = () => {
             <Table>
               <TableHead sx={{ backgroundColor: '#007aff' }}>
                 <TableRow>
-                  {[
-                    { label: 'Data/Hora', key: 'dataMovimentacao' },
-                    { label: 'Setor de Origem', key: 'setorOrigem.nome' },
-                    { label: 'Nome do Colaborador', key: 'nomeColaborador' },
-                    { label: 'Status', key: 'status' },
-                    { label: 'Hostname', key: 'coletor.hostname' }
-                  ].map((col) => (
+                  {[{ label: 'Data/Hora', key: 'dataMovimentacao' }, { label: 'Setor', key: 'setorOrigem.nome' }, { label: 'Nome do Colaborador', key: 'nomeColaborador' }, { label: 'Status', key: 'status' }, { label: 'Hostname', key: 'coletor.hostname' }].map((col) => (
                     <TableCell key={col.key} sx={{ color: 'white', fontWeight: 'bold' }}>
                       <TableSortLabel
                         active={orderBy === col.key}
@@ -179,18 +196,11 @@ const HistorialPage: React.FC = () => {
               </TableHead>
               <TableBody>
                 {groupMovimentacoes().map((movimentacao: any) => {
-                  // Função para calcular a diferença em horas
-                  const diffInHours = (date: Date) => {
-                    const now = new Date();
-                    return Math.abs(now.getTime() - new Date(date).getTime()) / (1000 * 3600);
-                  };
-
-                  // Determina o estilo da linha
                   const rowStyle = movimentacao.entregue
-                    ? { backgroundColor: '#00d60066' } // Verde se houver entrega
+                    ? { backgroundColor: '#00d60066' }
                     : diffInHours(movimentacao.retirado.dataMovimentacao) > 8
-                    ? { backgroundColor: '#ffeb3b' } // Amarelo se a retirada foi há mais de 8 horas
-                    : { backgroundColor: '#fffff' }; // Azul se não houver entrega e data recente
+                    ? { backgroundColor: '#ffeb3b' }
+                    : { backgroundColor: '#fffff' };
 
                   return (
                     <TableRow key={movimentacao.id} sx={rowStyle}>
